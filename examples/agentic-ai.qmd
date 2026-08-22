@@ -1,0 +1,79 @@
+---
+format:
+  revealjs:
+    theme: dark
+    transition: fade
+    width: 1920
+    height: 1080
+video:
+  language: en
+  provider: kokoro
+  voice: kokoro:af_heart
+  pause-before-slide: 0.3
+  pause-after-slide: 0.7
+---
+
+## From Prompt to Agent
+
+### Four levels of AI assistance
+
+Chat → Tools → Workflows → Agents
+
+::: {.notes}
+Artificial intelligence becomes more useful as we move from isolated prompts toward systems that can complete meaningful work. Let us examine four practical levels of AI assistance.
+:::
+
+## Level 1: Chat
+
+- Ask a question
+- Receive an answer
+- Apply it yourself
+
+::: {.notes}
+At level one, artificial intelligence is conversational. You ask a question, receive an answer, and remain responsible for every action that follows.
+:::
+
+## Level 2: Tools
+
+```python
+report = model.generate(brief)
+report.save("analysis.pdf")
+```
+
+::: {.notes}
+At level two, the model produces a finished artifact. That might be a report, a presentation, an image, or a block of working code.
+:::
+
+## Level 3: Workflows
+
+```{mermaid}
+flowchart LR
+  A[Trigger] --> B[Collect]
+  B --> C[Reason]
+  C --> D[Deliver]
+```
+
+::: {.notes}
+At level three, repeatable steps become a workflow. A trigger starts the process, information is collected, the system reasons over it, and a result is delivered.
+:::
+
+## Level 4: Agents
+
+> An agent chooses actions based on results.
+
+1. Observe
+2. Decide
+3. Act
+4. Verify
+
+::: {.notes}
+At level four, an agent can observe its environment, decide what to do, take an action, and inspect the outcome before continuing.
+:::
+
+## The synchronization contract
+
+$$T_{slide}=T_{lead}+T_{narration}+T_{trail}$$
+
+::: {.notes}
+Our video renderer uses a simple contract. Each slide stays visible for a leading pause, the exact measured narration duration, and a trailing pause. Audio controls the timeline.
+:::

@@ -1,0 +1,10 @@
+node_modules/
+.basa-video/
+*.mp4
+*.srt
+examples/agentic-ai.html
+examples/agentic-ai_files/
+.env
+.env.*
+*.voice-consent.json
+*.reference-audio.*

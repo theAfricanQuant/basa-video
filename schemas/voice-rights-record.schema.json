@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/basa-video/voice-rights-record.schema.json",
+  "title": "Voice rights record",
+  "description": "Private authorization record for reference-audio voice synthesis. Do not commit completed records.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "recordId",
+    "authorizationBasis",
+    "consentToSynthesis",
+    "permittedUse",
+    "commercialUse",
+    "revoked"
+  ],
+  "properties": {
+    "recordId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "authorizationBasis": {
+      "enum": [
+        "self",
+        "written-consent"
+      ]
+    },
+    "consentToSynthesis": {
+      "const": true
+    },
+    "permittedUse": {
+      "type": "string",
+      "minLength": 1
+    },
+    "commercialUse": {
+      "type": "boolean"
+    },
+    "territories": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "audiences": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "expiresAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "revoked": {
+      "type": "boolean"
+    },
+    "attribution": {
+      "type": "string"
+    },
+    "disclosure": {
+      "type": "string"
+    }
+  }
+}

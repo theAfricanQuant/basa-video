@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/basa-video/model-license-record.schema.json",
+  "title": "Basa Video model and voice license record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "provider", "artifactId", "revision", "sourceUrl", "sha256",
+    "licenseSpdx", "licenseUrl", "commercialUseAllowed",
+    "redistributionAllowed", "voiceType", "reviewedAt"
+  ],
+  "properties": {
+    "provider": { "type": "string", "minLength": 1 },
+    "artifactId": { "type": "string", "minLength": 1 },
+    "revision": { "type": "string", "minLength": 1 },
+    "sourceUrl": { "type": "string", "format": "uri" },
+    "sha256": { "type": "string", "pattern": "^[a-fA-F0-9]{64}$" },
+    "licenseSpdx": { "type": "string", "minLength": 1 },
+    "licenseUrl": { "type": "string", "format": "uri" },
+    "commercialUseAllowed": { "type": "boolean" },
+    "redistributionAllowed": { "type": "boolean" },
+    "attributionRequired": { "type": "boolean", "default": false },
+    "voiceType": {
+      "enum": ["built-in", "designed", "cloned", "user-supplied", "community"]
+    },
+    "reviewedAt": { "type": "string", "format": "date" },
+    "notes": { "type": "string" }
+  }
+}

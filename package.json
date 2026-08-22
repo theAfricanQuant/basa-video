@@ -1,0 +1,30 @@
+{
+  "name": "basa-video",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "basa-video": "src/cli.mjs"
+  },
+  "scripts": {
+    "test": "node --test",
+    "demo": "node src/cli.mjs render examples/agentic-ai.qmd --provider kokoro --output examples/agentic-ai.mp4",
+    "check:licenses": "node scripts/check-licenses.mjs",
+    "sbom": "npm sbom --sbom-format cyclonedx"
+  },
+  "dependencies": {
+    "puppeteer-core": "^25.8.0",
+    "yaml": "^2.8.1"
+  },
+  "description": "Create synchronized narrated videos from QMD and Reveal.js presentations.",
+  "license": "Apache-2.0",
+  "files": [
+    "src",
+    "docs",
+    "scripts",
+    "schemas",
+    "LICENSE",
+    "README.md",
+    "NOTICE"
+  ]
+}
