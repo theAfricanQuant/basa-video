@@ -49,16 +49,6 @@ export function secondsToSrt(value) {
   return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")},${String(millis).padStart(3, "0")}`;
 }
 
-export function buildSrt(slides, lead, trail) {
-  let cursor = 0;
-  return slides.map((slide, index) => {
-    const start = cursor + lead;
-    const end = start + slide.audioDuration;
-    cursor += lead + slide.audioDuration + trail;
-    return `${index + 1}\n${secondsToSrt(start)} --> ${secondsToSrt(end)}\n${slide.notes.trim().replace(/\s+/g, " ")}\n`;
-  }).join("\n");
-}
-
 export async function exists(path) {
   try { await access(path, constants.F_OK); return true; } catch { return false; }
 }

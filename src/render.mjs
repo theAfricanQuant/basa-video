@@ -2,10 +2,11 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { basename, dirname, extname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import puppeteer from "puppeteer-core";
-import { buildSrt, parseFrontMatter, probeDuration, renderInput, run, saveJson, splitVoice } from "./lib.mjs";
+import { parseFrontMatter, probeDuration, renderInput, run, saveJson, splitVoice } from "./lib.mjs";
 import { assertVoiceProviderReady, synthesizeMany } from "./voices.mjs";
 import { assertProviderTerms, buildProviderProvenance, loadVoiceRightsProvenance } from "./legal.mjs";
 import { assertRenderToolchain } from "./toolchain.mjs";
+import { buildCaptionFiles } from "./captions.mjs";
 
 function number(value, fallback) { const parsed = Number(value); return Number.isFinite(parsed) ? parsed : fallback; }
 
@@ -36,6 +37,13 @@ export async function renderVideo(input, cli = {}) {
   const language = cli.language || video.language || "en";
   const width = number(cli.width || video.width, 1920), height = number(cli.height || video.height, 1080), fps = number(cli.fps || video.fps, 30);
   const lead = number(cli.lead || video["pause-before-slide"], 0.3), trail = number(cli.trail || video["pause-after-slide"], 0.7);
+  const captionOptions = {
+    lead, trail, width, height,
+    maxChars: number(cli.caption_max_chars || video["caption-max-chars"], 48),
+    maxWords: number(cli.caption_max_words || video["caption-max-words"], 8),
+    fontSize: number(cli.caption_font_size || video["caption-font-size"], 34),
+    marginV: number(cli.caption_margin || video["caption-margin"], 30)
+  };
   const speed = number(cli.speed || video.speed, 1);
   const device = cli.device || video.device;
   const output = resolve(cli.output || `${basename(input, extname(input))}.mp4`);
@@ -95,9 +103,11 @@ export async function renderVideo(input, cli = {}) {
   await writeFile(concatPath, slides.map(slide => `file '${slide.segment.replaceAll("'", "'\\''")}'`).join("\n"));
   await mkdir(dirname(output), { recursive: true });
   await run(toolchain.ffmpeg, ["-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", concatPath, "-c", "copy", "-metadata", `comment=AI-generated narration; provider=${provider}`, "-movflags", "+faststart", output]);
-  const srt = output.replace(/\.mp4$/i, ".srt");
-  await writeFile(srt, buildSrt(slides, lead, trail));
-  await saveJson(join(workDir, "manifest.json"), { input: resolve(input), htmlPath, output, provider, language, width, height, fps, lead, trail, speed, device: device || null, quartoExecutable, quartoVersion, toolchain, provenance, slides });
-  console.log(`[6/6] Done\nVideo: ${output}\nCaptions: ${srt}\nManifest: ${join(workDir, "manifest.json")}`);
-  return { output, srt, slides };
+  const outputStem = output.replace(/\.[^.]+$/, "");
+  const srt = `${outputStem}.srt`, ass = `${outputStem}.ass`;
+  const captions = buildCaptionFiles(slides, captionOptions);
+  await Promise.all([writeFile(srt, captions.srt), writeFile(ass, captions.ass)]);
+  await saveJson(join(workDir, "manifest.json"), { input: resolve(input), htmlPath, output, provider, language, width, height, fps, lead, trail, speed, device: device || null, quartoExecutable, quartoVersion, toolchain, provenance, captions: { ...captionOptions, strategy: "phrase-weighted", cues: captions.cues.length, srt, ass }, slides });
+  console.log(`[6/6] Done\nVideo: ${output}\nCaptions: ${srt}\nStyled captions: ${ass}\nManifest: ${join(workDir, "manifest.json")}`);
+  return { output, srt, ass, slides };
 }

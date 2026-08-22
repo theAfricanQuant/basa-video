@@ -11,6 +11,9 @@ video:
   voice: kokoro:af_heart
   pause-before-slide: 0.3
   pause-after-slide: 0.7
+  caption-max-chars: 48
+  caption-max-words: 8
+  caption-font-size: 34
 ---
 
 ## From Prompt to Agent

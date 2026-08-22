@@ -2,6 +2,7 @@ node_modules/
 .basa-video/
 *.mp4
 *.srt
+*.ass
 examples/agentic-ai.html
 examples/agentic-ai_files/
 .env

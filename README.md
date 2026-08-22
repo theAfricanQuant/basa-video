@@ -53,6 +53,9 @@ video:
   title-slide-notes: "Welcome to this presentation."
   pause-before-slide: 0.3
   pause-after-slide: 0.7
+  caption-max-chars: 48
+  caption-max-words: 8
+  caption-font-size: 34
 ```
 
 Kokoro is the free, local default. Its runtime is installed in an isolated
@@ -73,8 +76,13 @@ basa-video voices --provider elevenlabs --search Nigerian
 basa-video render deck.qmd --provider elevenlabs --voice VOICE_ID --elevenlabs-plan paid
 ```
 
-Outputs include the MP4, an SRT caption file, and a cached build manifest in a
-`.basa-video/` directory beside the input deck. Audio is reused when provider,
+Outputs include the MP4, a universally compatible SRT file, a smaller styled
+ASS caption file, and a cached build manifest in a `.basa-video/` directory
+beside the input deck. Captions are emitted as short, single-line phrases whose
+windows follow the measured narration duration. SRT font size is controlled by
+the video player; ASS uses `caption-font-size` for predictable presentation.
+Audio is
+reused when provider,
 voice, model, language, and transcript are unchanged.
 
 ## Platform support

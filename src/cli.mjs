@@ -20,6 +20,7 @@ Kokoro is the free local default. First run:
   basa-video setup --accept-model-license
 
 Render options: --language en --speed 1 --device cpu|cuda|mps --model MODEL --lead 0.3 --trail 0.7 --width 1920 --height 1080 --fps 30 --force-audio
+Captions: --caption-max-chars 48 --caption-max-words 8 --caption-font-size 34 --caption-margin 30
 ElevenLabs: --elevenlabs-plan free|paid|enterprise [--commercial]
 Reference voices: --reference-audio FILE --voice-rights-record FILE --confirm-voice-rights`);
 }
