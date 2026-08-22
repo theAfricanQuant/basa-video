@@ -1,0 +1,752 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Basa Video architecture direction beyond QMD: a universal presentation manifest, PDF and image inputs, reviewed narration, and one shared rendering pipeline.">
+  <title>Basa Video — Beyond QMD</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #10243b;
+      --muted: #5c6d80;
+      --paper: #f5f8fb;
+      --surface: #ffffff;
+      --wash: #e8f0f6;
+      --line: #c7d5e2;
+      --navy: #071a30;
+      --navy-2: #0d2946;
+      --blue: #2366c2;
+      --cyan: #0e98a5;
+      --cyan-soft: #d9f2f2;
+      --amber: #de941c;
+      --amber-soft: #fff1d6;
+      --coral: #c84e46;
+      --green: #187b67;
+      --shadow: 0 22px 60px rgba(7, 26, 48, 0.13);
+      --display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+      --body: Aptos, "Segoe UI", Inter, system-ui, -apple-system, sans-serif;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 5.5rem; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: var(--body);
+      line-height: 1.65;
+      text-rendering: optimizeLegibility;
+    }
+    a { color: #1657a8; text-underline-offset: 0.2em; }
+    a:hover { color: var(--blue); }
+    a:focus-visible { outline: 3px solid var(--amber); outline-offset: 3px; }
+    code { font-family: var(--mono); }
+
+    .skip-link {
+      position: fixed;
+      top: -5rem;
+      left: 1rem;
+      z-index: 100;
+      padding: 0.7rem 1rem;
+      color: var(--ink);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+    .skip-link:focus { top: 1rem; }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      min-height: 4rem;
+      padding: 0.75rem max(1.25rem, calc((100vw - 1160px) / 2));
+      color: #eff7ff;
+      background: rgba(7, 26, 48, 0.96);
+      border-bottom: 1px solid rgba(255,255,255,0.13);
+      backdrop-filter: blur(14px);
+    }
+    .brand {
+      display: flex;
+      align-items: baseline;
+      gap: 0.55rem;
+      color: inherit;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .brand strong { font-family: var(--display); font-size: 1.35rem; }
+    .brand span {
+      color: #9fc5d8;
+      font-family: var(--mono);
+      font-size: 0.67rem;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+    nav { display: flex; gap: 1rem; overflow-x: auto; scrollbar-width: none; }
+    nav::-webkit-scrollbar { display: none; }
+    nav a {
+      color: #c9d8e8;
+      font-size: 0.78rem;
+      font-weight: 750;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    nav a:hover { color: #fff; }
+
+    .hero {
+      overflow: hidden;
+      color: #f4f9ff;
+      background:
+        linear-gradient(112deg, rgba(14,152,165,0.18), transparent 43%),
+        radial-gradient(circle at 82% 30%, rgba(222,148,28,0.16), transparent 26%),
+        var(--navy);
+      border-bottom: 5px solid var(--cyan);
+    }
+    .hero-inner {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(19rem, 0.75fr);
+      gap: clamp(2rem, 6vw, 6rem);
+      align-items: end;
+      width: min(1160px, calc(100% - 2.5rem));
+      margin: 0 auto;
+      padding: clamp(4rem, 10vw, 7.5rem) 0 clamp(4rem, 8vw, 6.5rem);
+    }
+    .eyebrow {
+      margin: 0 0 1rem;
+      color: #8ed2d7;
+      font-family: var(--mono);
+      font-size: 0.73rem;
+      font-weight: 800;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+    h1, h2, h3 { font-family: var(--display); text-wrap: balance; }
+    h1 {
+      margin: 0;
+      font-size: clamp(3.2rem, 7.2vw, 6.7rem);
+      font-weight: 600;
+      letter-spacing: -0.055em;
+      line-height: 0.94;
+    }
+    .hero-copy > p:last-child {
+      max-width: 760px;
+      margin: 1.6rem 0 0;
+      color: #c5d7e9;
+      font-size: clamp(1.05rem, 2vw, 1.28rem);
+    }
+    .hero-note {
+      padding: 1.5rem;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.16);
+      border-top: 4px solid var(--amber);
+    }
+    .hero-note p { margin: 0; color: #c7d8e9; }
+    .hero-note strong { display: block; margin-bottom: 0.55rem; color: #fff; font-size: 1.08rem; }
+
+    main {
+      width: min(1160px, calc(100% - 2.5rem));
+      margin: 0 auto;
+      padding: 4.5rem 0 7rem;
+    }
+    section { margin-top: 6rem; }
+    section:first-child { margin-top: 0; }
+    .section-head {
+      display: grid;
+      grid-template-columns: minmax(0, 0.76fr) minmax(0, 1.3fr);
+      gap: 2rem;
+      align-items: end;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--line);
+    }
+    .section-head h2 {
+      margin: 0;
+      font-size: clamp(2.1rem, 4.2vw, 3.7rem);
+      font-weight: 600;
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+    .section-head p { max-width: 680px; margin: 0; color: var(--muted); }
+
+    .origin {
+      display: grid;
+      grid-template-columns: 1.45fr 0.75fr;
+      gap: 1.25rem;
+    }
+    .origin-story {
+      padding: clamp(1.7rem, 4vw, 3rem);
+      background: var(--surface);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+    }
+    .origin-story blockquote {
+      margin: 0;
+      font-family: var(--display);
+      font-size: clamp(1.55rem, 3.2vw, 2.55rem);
+      font-weight: 600;
+      line-height: 1.28;
+    }
+    .origin-story p { margin: 1.3rem 0 0; color: var(--muted); }
+    .origin-answer {
+      padding: 1.7rem;
+      color: #eefbfc;
+      background: var(--cyan);
+    }
+    .origin-answer .big {
+      display: block;
+      margin-bottom: 0.7rem;
+      font-family: var(--display);
+      font-size: 4.5rem;
+      font-weight: 700;
+      line-height: 0.9;
+    }
+    .origin-answer p { margin: 0; }
+
+    .seam {
+      position: relative;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+    }
+    .seam::before {
+      content: "YOU ARE HERE";
+      position: absolute;
+      top: -0.85rem;
+      left: 50%;
+      z-index: 2;
+      transform: translateX(-50%);
+      padding: 0.35rem 0.7rem;
+      color: #fff;
+      background: var(--coral);
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+    }
+    .seam-side { padding: clamp(1.5rem, 4vw, 2.7rem); }
+    .seam-side:first-child { background: #edf7f7; border-right: 2px dashed var(--coral); }
+    .seam-side h3 { margin: 0 0 0.8rem; font-size: 1.8rem; }
+    .seam-side ul { margin: 1rem 0 0; padding-left: 1.2rem; }
+    .seam-side li { margin: 0.4rem 0; }
+    .tag {
+      display: inline-block;
+      margin-bottom: 0.8rem;
+      padding: 0.25rem 0.55rem;
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .tag-shipped { color: var(--green); background: #dcefe9; }
+    .tag-next { color: #925d09; background: var(--amber-soft); }
+    .continuity {
+      margin: 1.2rem 0 0;
+      padding: 1rem 1.2rem;
+      color: #60491f;
+      background: var(--amber-soft);
+      border-left: 4px solid var(--amber);
+      font-size: 0.9rem;
+    }
+
+    .adapter-map {
+      overflow-x: auto;
+      padding: clamp(1.3rem, 4vw, 2.7rem);
+      color: #edf7ff;
+      background: var(--navy-2);
+      box-shadow: var(--shadow);
+    }
+    .map-grid {
+      display: grid;
+      grid-template-columns: minmax(12rem, 0.85fr) 3rem minmax(13rem, 1fr) 3rem minmax(14rem, 1.1fr);
+      gap: 0.7rem;
+      align-items: stretch;
+      min-width: 760px;
+    }
+    .doors { display: grid; gap: 0.65rem; }
+    .door, .core, .engine {
+      display: grid;
+      align-content: center;
+      padding: 1rem;
+      border: 1px solid rgba(255,255,255,0.17);
+    }
+    .door { min-height: 4.2rem; background: rgba(255,255,255,0.06); }
+    .door strong, .core strong, .engine strong { display: block; }
+    .door span, .core span, .engine span { color: #b7cbe0; font-size: 0.78rem; }
+    .door.current { border-left: 4px solid var(--cyan); }
+    .door.near { border-left: 4px solid var(--amber); }
+    .door.later { border-left: 4px solid #8a95a5; }
+    .arrow {
+      display: grid;
+      place-items: center;
+      color: #85a4c4;
+      font-size: 1.8rem;
+    }
+    .core {
+      background: rgba(14,152,165,0.22);
+      border: 2px solid #45bbc4;
+    }
+    .core strong { margin-bottom: 0.5rem; font-family: var(--display); font-size: 1.6rem; }
+    .engine { background: rgba(35,102,194,0.24); border: 2px solid #6197df; }
+    .engine ul { margin: 0.8rem 0 0; padding-left: 1.1rem; color: #c7d8e9; font-size: 0.84rem; }
+    .map-legend { display: flex; flex-wrap: wrap; gap: 1rem; margin: 1.2rem 0 0; color: #b7cbe0; font-size: 0.76rem; }
+    .map-legend b { color: #fff; }
+
+    .manifest-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(20rem, 0.95fr);
+      gap: 1.3rem;
+    }
+    .manifest-copy {
+      padding: 2rem;
+      background: var(--surface);
+      border: 1px solid var(--line);
+    }
+    .manifest-copy h3 { margin: 0 0 0.7rem; font-size: 2rem; }
+    .manifest-copy p { color: var(--muted); }
+    .manifest-copy dl {
+      display: grid;
+      grid-template-columns: 7rem 1fr;
+      gap: 0.65rem 1rem;
+      margin: 1.4rem 0 0;
+      padding-top: 1.2rem;
+      border-top: 1px solid var(--line);
+      font-size: 0.88rem;
+    }
+    .manifest-copy dt { font-weight: 750; }
+    .manifest-copy dd { margin: 0; color: var(--muted); }
+    pre {
+      overflow-x: auto;
+      margin: 0;
+      padding: 1.6rem;
+      color: #dcecff;
+      background: var(--navy);
+      border-top: 4px solid var(--cyan);
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      line-height: 1.65;
+      tab-size: 2;
+    }
+    .key { color: #7bd3d8; }
+    .value { color: #ffcf7d; }
+    .comment { color: #829bb6; }
+
+    .workflow-list { display: grid; gap: 1rem; }
+    .workflow {
+      display: grid;
+      grid-template-columns: 8rem 1fr minmax(16rem, 0.72fr);
+      gap: 1.2rem;
+      align-items: center;
+      padding: 1.35rem;
+      background: var(--surface);
+      border: 1px solid var(--line);
+    }
+    .workflow-state {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+    .workflow-state.shipped { color: var(--green); }
+    .workflow-state.proposed { color: #9b650e; }
+    .workflow h3 { margin: 0 0 0.35rem; font-size: 1.35rem; }
+    .workflow p { margin: 0; color: var(--muted); font-size: 0.88rem; }
+    .command {
+      padding: 0.85rem 1rem;
+      color: #e7f1ff;
+      background: var(--navy-2);
+      font-family: var(--mono);
+      font-size: 0.76rem;
+      line-height: 1.55;
+    }
+    .command.proposed { color: #644915; background: var(--amber-soft); border: 1px dashed var(--amber); }
+
+    .table-shell { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); }
+    table { width: 100%; min-width: 850px; border-collapse: collapse; font-size: 0.88rem; }
+    th, td { padding: 0.9rem; text-align: left; vertical-align: top; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    th:last-child, td:last-child { border-right: 0; }
+    tbody tr:last-child td, tbody tr:last-child th { border-bottom: 0; }
+    thead th { color: #edf7ff; background: var(--navy-2); font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.07em; text-transform: uppercase; }
+    tbody th { background: var(--wash); }
+    .priority-now { color: var(--green); font-weight: 750; }
+    .priority-next { color: #9b650e; font-weight: 750; }
+    .priority-later { color: var(--muted); font-weight: 750; }
+
+    .guardrail-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+    .guardrail {
+      padding: 1.5rem;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-top: 4px solid var(--cyan);
+    }
+    .guardrail:nth-child(2) { border-top-color: var(--amber); }
+    .guardrail:nth-child(3) { border-top-color: var(--blue); }
+    .guardrail h3 { margin: 0 0 0.55rem; font-size: 1.35rem; }
+    .guardrail p { margin: 0; color: var(--muted); font-size: 0.9rem; }
+
+    .interface-strip {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 1px;
+      background: var(--line);
+      border: 1px solid var(--line);
+    }
+    .interface-step { position: relative; min-height: 9rem; padding: 1.2rem; background: var(--surface); }
+    .interface-step b { display: block; margin-bottom: 0.5rem; font-family: var(--mono); font-size: 0.68rem; color: var(--blue); letter-spacing: 0.08em; }
+    .interface-step strong { display: block; margin-bottom: 0.4rem; }
+    .interface-step span { color: var(--muted); font-size: 0.8rem; }
+
+    .decision {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(16rem, 0.6fr);
+      gap: 1.5rem;
+      padding: clamp(1.7rem, 4vw, 3rem);
+      color: #eff8ff;
+      background: var(--navy);
+    }
+    .decision blockquote {
+      margin: 0;
+      font-family: var(--display);
+      font-size: clamp(1.8rem, 4vw, 3.25rem);
+      font-weight: 600;
+      line-height: 1.14;
+    }
+    .decision aside { padding-left: 1.4rem; border-left: 1px solid rgba(255,255,255,0.2); }
+    .decision aside p { margin: 0; color: #bdd0e4; }
+    .decision aside strong { color: #fff; }
+
+    .roadmap-map {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(10rem, 1fr));
+      overflow-x: auto;
+      background: var(--surface);
+      border: 1px solid var(--line);
+    }
+    .roadmap-stop { min-height: 12rem; padding: 1.2rem; border-right: 1px solid var(--line); }
+    .roadmap-stop:last-child { border-right: 0; }
+    .roadmap-stop b { color: var(--blue); font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.08em; }
+    .roadmap-stop h3 { margin: 0.6rem 0 0.5rem; font-size: 1.2rem; }
+    .roadmap-stop p { margin: 0; color: var(--muted); font-size: 0.8rem; }
+    .roadmap-stop.focus { background: var(--cyan-soft); }
+
+    footer {
+      padding: 2rem 1.25rem;
+      color: #9eb5ca;
+      background: var(--navy);
+      text-align: center;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+    }
+
+    @media (max-width: 850px) {
+      .topbar { align-items: flex-start; flex-direction: column; }
+      nav { width: 100%; }
+      .hero-inner, .section-head, .origin, .manifest-layout, .decision { grid-template-columns: 1fr; }
+      .seam { grid-template-columns: 1fr; }
+      .seam::before { left: 1.5rem; transform: none; }
+      .seam-side:first-child { border-right: 0; border-bottom: 2px dashed var(--coral); }
+      .workflow { grid-template-columns: 1fr; }
+      .guardrail-grid { grid-template-columns: 1fr; }
+      .interface-strip { grid-template-columns: 1fr 1fr; }
+      .decision aside { padding: 1.2rem 0 0; border-left: 0; border-top: 1px solid rgba(255,255,255,0.2); }
+    }
+
+    @media (max-width: 560px) {
+      .hero-inner, main { width: min(100% - 1.5rem, 1160px); }
+      h1 { font-size: clamp(3rem, 16vw, 4.5rem); }
+      .interface-strip { grid-template-columns: 1fr; }
+      .manifest-copy dl { grid-template-columns: 1fr; gap: 0.15rem; }
+      .manifest-copy dd { margin-bottom: 0.6rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+    @media print {
+      @page { size: A4 landscape; margin: 12mm; }
+      body { color: #000; background: #fff; font-size: 10pt; }
+      .topbar, .skip-link { display: none; }
+      .hero { color: #000; background: #fff; border-bottom: 2px solid #000; }
+      .hero-inner, main { width: 100%; padding-top: 0; }
+      .hero-copy > p:last-child, .hero-note p { color: #333; }
+      .hero-note, .origin-answer, .adapter-map, pre, .decision { color: #000; background: #fff; border: 1px solid #777; box-shadow: none; }
+      .adapter-map *, pre *, .decision * { color: #000 !important; }
+      section { margin-top: 2rem; break-inside: avoid; }
+      footer { color: #000; background: #fff; border-top: 1px solid #777; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#content">Skip to architecture</a>
+
+  <header class="topbar">
+    <a class="brand" href="#top"><strong>Basa</strong><span>Beyond QMD</span></a>
+    <nav aria-label="Report sections">
+      <a href="#handoff">Current hand-off</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#manifest">Manifest</a>
+      <a href="#workflows">Workflows</a>
+      <a href="#roadmap">Roadmap</a>
+      <a href="comparison.html">Previous study</a>
+    </nav>
+  </header>
+
+  <div id="top" class="hero">
+    <div class="hero-inner">
+      <div class="hero-copy">
+        <p class="eyebrow">Architecture direction · 22 August 2026</p>
+        <h1>Quarto is a door.<br>Not the building.</h1>
+        <p>Basa began with a teacher, a Quarto deck and a simple question: can the presentation and its speaker notes become a useful narrated video? The answer now points to something broader—one dependable teaching-video engine with several ways in.</p>
+      </div>
+      <aside class="hero-note">
+        <strong>The essential input is not QMD.</strong>
+        <p>It is an ordered set of visuals, reviewed narration and enough structure to build a deterministic timeline.</p>
+      </aside>
+    </div>
+  </div>
+
+  <main id="content">
+    <section aria-labelledby="origin-title">
+      <div class="section-head">
+        <h2 id="origin-title">The question behind Basa</h2>
+        <p>The original use case should remain visible as the product expands. It protects Basa from becoming a generic AI-video application with no clear publishing contract.</p>
+      </div>
+      <div class="origin">
+        <article class="origin-story">
+          <blockquote>“I already have the presentation I use to teach. Why should turning it into a narrated course video require rebuilding the lesson somewhere else?”</blockquote>
+          <p>ArtBox, Voicebox and similar experiments demonstrated pieces of the idea, but their friction revealed the real opportunity: keep the authored teaching material authoritative and make video generation a repeatable publishing step.</p>
+        </article>
+        <aside class="origin-answer">
+          <span class="big">Yes.</span>
+          <p>Basa can work without QMD. Removing QMD does not remove the need for visuals, narration or ordering—it changes how those inputs arrive.</p>
+        </aside>
+      </div>
+    </section>
+
+    <section id="handoff" aria-labelledby="handoff-title">
+      <div class="section-head">
+        <h2 id="handoff-title">Where the previous study stopped</h2>
+        <p>The <a href="comparison.html">product comparison</a> established Basa’s current differentiation and recommended fragment-level narration next. This study keeps that work and inserts a smaller universal-input seam before the more complex fragment timeline.</p>
+      </div>
+      <div class="seam">
+        <article class="seam-side">
+          <span class="tag tag-shipped">Shipped today</span>
+          <h3>QMD and Reveal HTML</h3>
+          <ul>
+            <li>Standard speaker notes supply narration.</li>
+            <li>One stable visual state is captured per slide.</li>
+            <li>Kokoro is the local default; ElevenLabs is optional.</li>
+            <li>Measured audio drives MP4 and caption timing.</li>
+            <li>Build cache and provenance manifest are written.</li>
+          </ul>
+        </article>
+        <article class="seam-side">
+          <span class="tag tag-next">Designed, not implemented</span>
+          <h3>Universal presentation manifest</h3>
+          <ul>
+            <li>PDF or ordered images provide stable visuals.</li>
+            <li>Markdown or YAML supplies reviewed narration.</li>
+            <li>AI may draft narration into an editable file.</li>
+            <li>PPTX and a thin interface arrive through later adapters.</li>
+            <li>Every route converges before synthesis and rendering.</li>
+          </ul>
+        </article>
+      </div>
+      <p class="continuity"><strong>The exact drop point:</strong> Basa currently normalizes slides inside the QMD/Reveal render path. It does not yet expose a versioned input manifest or accept PDF, images or PPTX. The next implementation begins by formalizing that boundary—not by building a second renderer.</p>
+    </section>
+
+    <section id="architecture" aria-labelledby="architecture-title">
+      <div class="section-head">
+        <h2 id="architecture-title">One core, many doors</h2>
+        <p>Each adapter is responsible only for producing ordered visual states and reviewed narration. Provider selection, timing, captions, caching, provenance and FFmpeg packaging remain shared.</p>
+      </div>
+      <div class="adapter-map" role="img" aria-label="Multiple source adapters converging on one Basa manifest and shared video engine">
+        <div class="map-grid">
+          <div class="doors">
+            <div class="door current"><strong>QMD + notes</strong><span>Current · Quarto adapter</span></div>
+            <div class="door current"><strong>Reveal HTML</strong><span>Current · DOM notes adapter</span></div>
+            <div class="door near"><strong>PDF + script</strong><span>Next · static page adapter</span></div>
+            <div class="door near"><strong>Images + script</strong><span>Next · ordered image adapter</span></div>
+            <div class="door later"><strong>PPTX + notes</strong><span>Later · structured office adapter</span></div>
+          </div>
+          <div class="arrow" aria-hidden="true">→</div>
+          <div class="core">
+            <strong>Basa presentation manifest</strong>
+            <span>Versioned source metadata</span>
+            <span>Ordered visual references</span>
+            <span>Reviewed narration per state</span>
+            <span>Voice and language configuration</span>
+            <span>Stable identifiers and provenance</span>
+          </div>
+          <div class="arrow" aria-hidden="true">→</div>
+          <div class="engine">
+            <strong>Shared teaching-video engine</strong>
+            <ul>
+              <li>Validate narration coverage</li>
+              <li>Synthesize and cache speech</li>
+              <li>Measure actual audio</li>
+              <li>Construct deterministic timeline</li>
+              <li>Write MP4, SRT, ASS and manifest</li>
+            </ul>
+          </div>
+        </div>
+        <p class="map-legend"><span><b>Cyan</b> shipped adapter</span><span><b>Amber</b> next static adapter</span><span><b>Grey</b> later structured adapter</span></p>
+      </div>
+    </section>
+
+    <section id="manifest" aria-labelledby="manifest-title">
+      <div class="section-head">
+        <h2 id="manifest-title">The portable contract</h2>
+        <p>The manifest should be plain, reviewable and source-controlled. It is not a new presentation format; it is the hand-off between an authored visual source and Basa’s existing narration-and-timing engine.</p>
+      </div>
+      <div class="manifest-layout">
+        <article class="manifest-copy">
+          <h3>What the manifest owns</h3>
+          <p>A QMD adapter can generate it automatically. A PDF user can create it with <code>basa-video init</code>. A future local interface can edit it without inventing a private database or project format.</p>
+          <dl>
+            <dt>Identity</dt><dd>Schema version, source file and stable visual-state identifiers.</dd>
+            <dt>Ordering</dt><dd>The exact page, slide or fragment sequence.</dd>
+            <dt>Narration</dt><dd>Reviewed text, language, voice and optional pronunciation hints.</dd>
+            <dt>Rendering</dt><dd>Output size, pauses, captions and future media-layer settings.</dd>
+            <dt>Provenance</dt><dd>Enough source information to explain and reproduce the build.</dd>
+          </dl>
+        </article>
+        <pre aria-label="Proposed Basa manifest example"><span class="comment"># Proposed schema — not implemented yet</span>
+<span class="key">version:</span> <span class="value">1</span>
+<span class="key">source:</span>
+  <span class="key">type:</span> <span class="value">pdf</span>
+  <span class="key">path:</span> <span class="value">course-slides.pdf</span>
+
+<span class="key">narration:</span>
+  <span class="key">language:</span> <span class="value">en</span>
+  <span class="key">voice:</span> <span class="value">kokoro:af_heart</span>
+
+<span class="key">slides:</span>
+  - <span class="key">id:</span> <span class="value">welcome</span>
+    <span class="key">page:</span> <span class="value">1</span>
+    <span class="key">notes:</span> <span class="value">&gt;</span>
+      Welcome to this introduction
+      to machine learning.
+
+  - <span class="key">id:</span> <span class="value">patterns</span>
+    <span class="key">page:</span> <span class="value">2</span>
+    <span class="key">notes:</span> <span class="value">&gt;</span>
+      Machine learning identifies
+      useful patterns from examples.</pre>
+      </div>
+    </section>
+
+    <section id="workflows" aria-labelledby="workflows-title">
+      <div class="section-head">
+        <h2 id="workflows-title">What using Basa could feel like</h2>
+        <p>Current commands are separated from proposed commands so the design cannot be mistaken for shipped functionality.</p>
+      </div>
+      <div class="workflow-list">
+        <article class="workflow">
+          <span class="workflow-state shipped">Available</span>
+          <div><h3>Quarto source</h3><p>Speaker notes are extracted automatically and remain beside the teaching material.</p></div>
+          <div class="command">basa-video render course.qmd</div>
+        </article>
+        <article class="workflow">
+          <span class="workflow-state shipped">Available</span>
+          <div><h3>Rendered Reveal deck</h3><p>The original QMD is unnecessary when the HTML already contains embedded <code>aside.notes</code>.</p></div>
+          <div class="command">basa-video render course.html</div>
+        </article>
+        <article class="workflow">
+          <span class="workflow-state proposed">Proposed</span>
+          <div><h3>Any slide tool via PDF</h3><p>Export PowerPoint, Keynote, Canva, Google Slides or another presentation as PDF, then review one narration entry per page.</p></div>
+          <div class="command proposed">basa-video init course.pdf<br>basa-video render course.basa.yaml</div>
+        </article>
+        <article class="workflow">
+          <span class="workflow-state proposed">Proposed</span>
+          <div><h3>AI-assisted script drafting</h3><p>Generate an editable narration draft from visible slide text. Rendering remains a separate, explicit action after review.</p></div>
+          <div class="command proposed">basa-video narrate course.pdf<br>--output course.basa.yaml</div>
+        </article>
+        <article class="workflow">
+          <span class="workflow-state proposed">Later</span>
+          <div><h3>PowerPoint with notes</h3><p>Extract notes directly while converting the slide visuals through a stable cross-platform path.</p></div>
+          <div class="command proposed">basa-video render course.pptx</div>
+        </article>
+      </div>
+    </section>
+
+    <section aria-labelledby="input-title">
+      <div class="section-head">
+        <h2 id="input-title">Input strategy</h2>
+        <p>The best first expansion is not necessarily the most magical one. PDF plus reviewed narration has less hidden behavior than PPTX and reaches almost every presentation tool.</p>
+      </div>
+      <div class="table-shell">
+        <table>
+          <thead><tr><th>Input</th><th>Visual fidelity</th><th>Narration source</th><th>Implementation risk</th><th>Priority</th></tr></thead>
+          <tbody>
+            <tr><th>QMD</th><td>High for Quarto Reveal</td><td>Standard notes</td><td>Already solved</td><td class="priority-now">Current</td></tr>
+            <tr><th>Reveal HTML</th><td>High when self-contained assets resolve</td><td>Embedded notes</td><td>Already solved</td><td class="priority-now">Current</td></tr>
+            <tr><th>PDF</th><td>High, stable static pages</td><td>Sidecar manifest</td><td>Low to moderate</td><td class="priority-next">Next</td></tr>
+            <tr><th>Ordered images</th><td>Exactly the supplied pixels</td><td>Sidecar manifest</td><td>Low</td><td class="priority-next">Next</td></tr>
+            <tr><th>PPTX</th><td>Dependent on fonts and converter</td><td>Embedded notes when present</td><td>High across operating systems</td><td class="priority-later">Later</td></tr>
+            <tr><th>Presentation URL</th><td>Dependent on page stability and access</td><td>Embedded or sidecar</td><td>High and format-specific</td><td class="priority-later">Later</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="ai-title">
+      <div class="section-head">
+        <h2 id="ai-title">AI drafts; teachers approve</h2>
+        <p>Visible slide text can help draft narration, but a confident synthetic voice can make a weak or incorrect explanation sound authoritative. Review must remain part of the file-based workflow.</p>
+      </div>
+      <div class="guardrail-grid">
+        <article class="guardrail"><h3>Separate drafting from rendering</h3><p><code>narrate</code> writes an editable manifest. <code>render</code> consumes reviewed narration. One command never silently performs both for new drafts.</p></article>
+        <article class="guardrail"><h3>Validate before synthesis</h3><p>Missing narration, page-count mismatches and unsupported inputs fail before remote API cost or local model computation begins.</p></article>
+        <article class="guardrail"><h3>Keep authorship visible</h3><p>The manifest records whether narration was supplied, AI-drafted or edited, while the teacher remains responsible for factual and pedagogical approval.</p></article>
+      </div>
+    </section>
+
+    <section aria-labelledby="interface-title">
+      <div class="section-head">
+        <h2 id="interface-title">A thin interface, eventually</h2>
+        <p>The interface should expose the same files and commands rather than become a second presentation editor or private project format.</p>
+      </div>
+      <div class="interface-strip" aria-label="Proposed local interface sequence">
+        <div class="interface-step"><b>1 · Choose</b><strong>Drop in a deck</strong><span>QMD, HTML, PDF or a later supported format.</span></div>
+        <div class="interface-step"><b>2 · Inspect</b><strong>See ordered visuals</strong><span>Thumbnails expose missing pages and unstable captures.</span></div>
+        <div class="interface-step"><b>3 · Review</b><strong>Edit narration</strong><span>Existing notes appear; missing notes can be written or drafted.</span></div>
+        <div class="interface-step"><b>4 · Listen</b><strong>Choose and preview voice</strong><span>Provider, accent, language and rights information stay explicit.</span></div>
+        <div class="interface-step"><b>5 · Render</b><strong>Run the same engine</strong><span>Progress, errors and output paths reflect the CLI pipeline.</span></div>
+      </div>
+    </section>
+
+    <section id="roadmap" aria-labelledby="roadmap-title">
+      <div class="section-head">
+        <h2 id="roadmap-title">Where this lands in the roadmap</h2>
+        <p>The manifest begins in the release-quality milestone because it is an architectural boundary. PDF and image workflows follow immediately, before fragment-level timing.</p>
+      </div>
+      <div class="roadmap-map">
+        <article class="roadmap-stop"><b>M1</b><h3>Release + manifest</h3><p>Cross-platform confidence, public packaging and version 1 of the normalized presentation contract.</p></article>
+        <article class="roadmap-stop focus"><b>M2</b><h3>PDF + images</h3><p><code>init</code>, narration sidecars, AI draft separation and the first universal static-deck workflow.</p></article>
+        <article class="roadmap-stop"><b>M3</b><h3>Timeline fidelity</h3><p>Reveal fragments, deterministic visual states, forced alignment and optional burned captions.</p></article>
+        <article class="roadmap-stop"><b>M4</b><h3>Voices + languages</h3><p>Reviewed optional providers, capability metadata and tested German support.</p></article>
+        <article class="roadmap-stop"><b>M5</b><h3>Richer media</h3><p>Music, embedded video, transitions, chapters and media-layer provenance.</p></article>
+        <article class="roadmap-stop"><b>M6</b><h3>PPTX + interface</h3><p>Structured adapters and a local interface sharing the exact CLI pipeline.</p></article>
+      </div>
+    </section>
+
+    <section aria-labelledby="decision-title">
+      <div class="decision">
+        <blockquote id="decision-title">Basa combines ordered visual scenes with reviewed narration and produces a synchronized, reproducible teaching video.</blockquote>
+        <aside><p><strong>Quarto remains the best first door.</strong> It is source-controlled, expressive and already carries speaker notes. The manifest simply makes sure it is not the only door.</p></aside>
+      </div>
+    </section>
+  </main>
+
+  <footer>Basa means “teach” in Berom · Beyond-QMD architecture direction · 22 August 2026</footer>
+</body>
+</html>

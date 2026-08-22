@@ -116,3 +116,9 @@ See the milestone-based [roadmap](docs/ROADMAP.md) for the path from the current
 MVP to release-quality cross-platform rendering, fragment-level timing,
 additional voices and languages, richer media, and future input adapters.
 Coding agents and automated contributors should follow [AGENTS.md](AGENTS.md).
+The [product comparison](docs/comparison.html) records the competitive study;
+the [Beyond QMD architecture study](docs/beyond-qmd.html) shows how PDF, image,
+PPTX and future inputs can converge on the same Basa rendering pipeline. The
+[Pi course-engine study](docs/pi-course-engine.html) proposes an optional agent
+layer that can turn longer source material into reviewed lessons while keeping
+the renderer deterministic.
