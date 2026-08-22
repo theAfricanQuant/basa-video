@@ -81,9 +81,8 @@ ASS caption file, and a cached build manifest in a `.basa-video/` directory
 beside the input deck. Captions are emitted as short, single-line phrases whose
 windows follow the measured narration duration. SRT font size is controlled by
 the video player; ASS uses `caption-font-size` for predictable presentation.
-Audio is
-reused when provider,
-voice, model, language, and transcript are unchanged.
+Audio is reused when provider, voice, model, language, and transcript are
+unchanged.
 
 ## Platform support
 
@@ -103,4 +102,17 @@ commands on each operating system.
 
 ## Licensing and responsible voice use
 
-Basa Video is Apache-2.0-licensed. Review [third-party notices](docs/THIRD_PARTY_NOTICES.md), the [model and voice policy](docs/MODEL_AND_VOICE_POLICY.md), the cited [licensing research](docs/LICENSING_RESEARCH.md), and [trademark information](docs/TRADEMARKS.md). Run `npm run check:licenses` before release. Reference-audio features require both explicit confirmation and a consent-record file documenting the permitted use.
+Basa Video is Apache-2.0-licensed. Review
+[third-party notices](docs/THIRD_PARTY_NOTICES.md), the
+[model and voice policy](docs/MODEL_AND_VOICE_POLICY.md), the cited
+[licensing research](docs/LICENSING_RESEARCH.md), and
+[trademark information](docs/TRADEMARKS.md). Run `npm run check:licenses`
+before release. Reference-audio features require both explicit confirmation
+and a consent-record file documenting the permitted use.
+
+## Project direction
+
+See the milestone-based [roadmap](docs/ROADMAP.md) for the path from the current
+MVP to release-quality cross-platform rendering, fragment-level timing,
+additional voices and languages, richer media, and future input adapters.
+Coding agents and automated contributors should follow [AGENTS.md](AGENTS.md).

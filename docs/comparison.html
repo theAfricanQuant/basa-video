@@ -1,0 +1,996 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A detailed comparison of Basa Video, ChalkTalk Studio, ari, PowerPoint and SlideSpeak bridges, and custom Quarto-to-video pipelines.">
+  <title>Basa Video — Product and workflow comparison</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #12213a;
+      --muted: #5c687b;
+      --paper: #f7f9fc;
+      --surface: #ffffff;
+      --surface-2: #edf2f8;
+      --line: #cbd5e3;
+      --cobalt: #195fda;
+      --cobalt-dark: #1247a3;
+      --amber: #d58b16;
+      --teal: #147d72;
+      --red: #b5473c;
+      --navy: #09162c;
+      --navy-2: #102446;
+      --shadow: 0 20px 55px rgba(16, 36, 70, 0.12);
+      --display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+      --body: Aptos, "Segoe UI", Inter, system-ui, -apple-system, sans-serif;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 5.5rem;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: var(--body);
+      font-size: 16px;
+      line-height: 1.65;
+      text-rendering: optimizeLegibility;
+    }
+
+    a { color: var(--cobalt-dark); }
+    a:hover { color: var(--cobalt); }
+    a:focus-visible, button:focus-visible {
+      outline: 3px solid var(--amber);
+      outline-offset: 3px;
+    }
+
+    .skip-link {
+      position: fixed;
+      left: 1rem;
+      top: -6rem;
+      z-index: 100;
+      padding: 0.7rem 1rem;
+      background: var(--surface);
+      color: var(--ink);
+      border-radius: 0.4rem;
+      box-shadow: var(--shadow);
+    }
+
+    .skip-link:focus { top: 1rem; }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      min-height: 4rem;
+      padding: 0.7rem max(1.25rem, calc((100vw - 1180px) / 2));
+      color: #eef5ff;
+      background: rgba(9, 22, 44, 0.96);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.13);
+      backdrop-filter: blur(14px);
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 0.55rem;
+      color: inherit;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .brand-mark {
+      font-family: var(--display);
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-sub {
+      color: #98afd3;
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.11em;
+      text-transform: uppercase;
+    }
+
+    .topbar nav {
+      display: flex;
+      gap: 1rem;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .topbar nav::-webkit-scrollbar { display: none; }
+    .topbar nav a {
+      color: #c7d7ef;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .topbar nav a:hover { color: #ffffff; }
+
+    .hero {
+      color: #f6f9ff;
+      background:
+        linear-gradient(118deg, rgba(25, 95, 218, 0.20), transparent 46%),
+        radial-gradient(circle at 88% 20%, rgba(213, 139, 22, 0.18), transparent 28%),
+        var(--navy);
+      border-bottom: 5px solid var(--cobalt);
+    }
+
+    .hero-inner {
+      width: min(1180px, calc(100% - 2.5rem));
+      margin: 0 auto;
+      padding: clamp(4.5rem, 10vw, 8rem) 0 clamp(3.5rem, 7vw, 6rem);
+    }
+
+    .eyebrow {
+      margin: 0 0 1.1rem;
+      color: #97b8ed;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3 {
+      font-family: var(--display);
+      text-wrap: balance;
+    }
+
+    h1 {
+      max-width: 920px;
+      margin: 0;
+      font-size: clamp(3rem, 7vw, 6.4rem);
+      font-weight: 600;
+      letter-spacing: -0.055em;
+      line-height: 0.96;
+    }
+
+    .hero-lede {
+      max-width: 730px;
+      margin: 1.8rem 0 0;
+      color: #c7d7ef;
+      font-size: clamp(1.05rem, 2vw, 1.32rem);
+    }
+
+    .verdict-strip {
+      display: grid;
+      grid-template-columns: 0.7fr 2fr;
+      gap: 1.4rem;
+      align-items: start;
+      width: min(1180px, calc(100% - 2.5rem));
+      margin: -2rem auto 0;
+      padding: 1.5rem;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-top: 5px solid var(--amber);
+      box-shadow: var(--shadow);
+    }
+
+    .verdict-label {
+      margin: 0;
+      color: var(--amber);
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .verdict-strip p:last-child {
+      margin: 0;
+      font-family: var(--display);
+      font-size: clamp(1.25rem, 2.3vw, 1.72rem);
+      font-weight: 600;
+      line-height: 1.35;
+    }
+
+    main {
+      width: min(1180px, calc(100% - 2.5rem));
+      margin: 0 auto;
+      padding: 5rem 0 7rem;
+    }
+
+    section { margin-top: 6rem; }
+    section:first-child { margin-top: 1rem; }
+
+    .section-head {
+      display: grid;
+      grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.45fr);
+      gap: 2rem;
+      align-items: end;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .section-head h2 {
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 3.5rem);
+      font-weight: 600;
+      letter-spacing: -0.035em;
+      line-height: 1;
+    }
+
+    .section-head p {
+      max-width: 690px;
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .pipeline-board {
+      position: relative;
+      overflow: hidden;
+      padding: clamp(1.4rem, 4vw, 3rem);
+      color: #edf5ff;
+      background: var(--navy-2);
+      box-shadow: var(--shadow);
+    }
+
+    .pipeline-board::after {
+      content: "";
+      position: absolute;
+      right: -4rem;
+      bottom: -5rem;
+      width: 17rem;
+      height: 17rem;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 50%;
+      box-shadow: 0 0 0 3rem rgba(255, 255, 255, 0.025), 0 0 0 7rem rgba(255, 255, 255, 0.02);
+    }
+
+    .lane {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 9rem repeat(5, minmax(6rem, 1fr));
+      gap: 0.7rem;
+      align-items: center;
+      padding: 0.85rem 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .lane:last-child { border-bottom: 0; }
+    .lane-name {
+      font-family: var(--mono);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .step {
+      position: relative;
+      min-height: 3.25rem;
+      display: grid;
+      place-items: center;
+      padding: 0.55rem;
+      text-align: center;
+      color: #dce9ff;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      font-size: 0.76rem;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+
+    .step::after {
+      content: "→";
+      position: absolute;
+      right: -0.62rem;
+      color: #7f9ccc;
+    }
+
+    .step:last-child::after { display: none; }
+    .lane-basa .step {
+      color: #ffffff;
+      background: rgba(25, 95, 218, 0.4);
+      border-color: #5792ef;
+    }
+    .lane-basa .lane-name { color: #80adf6; }
+    .lane-manual .step { border-style: dashed; }
+    .detour { color: #ffe0a6; border-color: rgba(213, 139, 22, 0.6); }
+
+    .legend {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.2rem;
+      margin: 1.3rem 0 0;
+      color: #aebfda;
+      font-size: 0.78rem;
+    }
+    .legend strong { color: #ffffff; }
+
+    .table-shell {
+      overflow-x: auto;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      box-shadow: 0 14px 35px rgba(16, 36, 70, 0.07);
+    }
+
+    table {
+      width: 100%;
+      min-width: 920px;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+
+    th, td {
+      padding: 0.9rem 0.85rem;
+      text-align: left;
+      vertical-align: top;
+      border-bottom: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+    }
+
+    th:last-child, td:last-child { border-right: 0; }
+    tbody tr:last-child td { border-bottom: 0; }
+    thead th {
+      color: #edf5ff;
+      background: var(--navy-2);
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    thead th.basa-col {
+      color: #ffffff;
+      background: #245daa;
+    }
+    thead th:first-child { min-width: 12rem; }
+    tbody th {
+      color: var(--ink);
+      background: var(--surface-2);
+      font-weight: 750;
+    }
+    .basa-col { background: #edf4ff; }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.38rem;
+      font-size: 0.78rem;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+    .status::before {
+      content: "";
+      width: 0.55rem;
+      height: 0.55rem;
+      border-radius: 50%;
+      background: currentColor;
+    }
+    .yes { color: var(--teal); }
+    .partial { color: #a66c0f; }
+    .no { color: var(--red); }
+    .na { color: #7a8494; }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1.25rem;
+    }
+
+    .card {
+      position: relative;
+      overflow: hidden;
+      padding: 1.6rem;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-top: 4px solid var(--cobalt);
+    }
+    .card:nth-child(2) { border-top-color: var(--teal); }
+    .card:nth-child(3) { border-top-color: var(--amber); }
+    .card:nth-child(4) { border-top-color: #7a5bbb; }
+    .card:nth-child(5) { border-top-color: #68778c; }
+
+    .card-kicker {
+      margin: 0 0 0.25rem;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .card h3 {
+      margin: 0 0 0.8rem;
+      font-size: 1.75rem;
+      line-height: 1.05;
+    }
+    .card > p { color: var(--muted); }
+    .card dl {
+      display: grid;
+      grid-template-columns: 7rem 1fr;
+      gap: 0.6rem 1rem;
+      margin: 1.3rem 0 0;
+      padding-top: 1.1rem;
+      border-top: 1px solid var(--line);
+      font-size: 0.87rem;
+    }
+    .card dt { color: var(--muted); font-weight: 700; }
+    .card dd { margin: 0; }
+
+    .cite {
+      display: inline-block;
+      margin-left: 0.12rem;
+      color: var(--cobalt-dark);
+      font-family: var(--mono);
+      font-size: 0.72em;
+      font-weight: 800;
+      text-decoration: none;
+      vertical-align: super;
+    }
+
+    .architecture {
+      display: grid;
+      grid-template-columns: 0.9fr 1.5fr;
+      gap: 2rem;
+    }
+
+    .architecture-copy {
+      padding: 1.8rem;
+      color: #eaf2ff;
+      background: var(--navy-2);
+    }
+    .architecture-copy h3 {
+      margin: 0 0 0.8rem;
+      color: #ffffff;
+      font-size: 2rem;
+    }
+    .architecture-copy p { color: #bdcce3; }
+    .architecture-copy code {
+      color: #ffe0a6;
+      font-family: var(--mono);
+    }
+
+    .contract {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      counter-reset: contract;
+      background: var(--surface);
+      border: 1px solid var(--line);
+    }
+    .contract li {
+      counter-increment: contract;
+      display: grid;
+      grid-template-columns: 3rem 1fr;
+      gap: 1rem;
+      padding: 1.15rem 1.3rem;
+      border-bottom: 1px solid var(--line);
+    }
+    .contract li:last-child { border-bottom: 0; }
+    .contract li::before {
+      content: counter(contract, decimal-leading-zero);
+      color: var(--cobalt);
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+    }
+    .contract strong { display: block; margin-bottom: 0.2rem; }
+    .contract span { color: var(--muted); font-size: 0.9rem; }
+
+    .gap-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1rem;
+    }
+    .gap-card {
+      padding: 1.4rem;
+      background: var(--surface);
+      border: 1px solid var(--line);
+    }
+    .gap-card.priority {
+      color: #eff6ff;
+      background: var(--cobalt-dark);
+      border-color: var(--cobalt-dark);
+    }
+    .gap-card h3 { margin: 0 0 0.55rem; font-size: 1.3rem; }
+    .gap-card p { margin: 0; color: var(--muted); font-size: 0.9rem; }
+    .gap-card.priority p { color: #c9dcfb; }
+    .gap-label {
+      display: inline-block;
+      margin-bottom: 1rem;
+      color: var(--amber);
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .positioning {
+      display: grid;
+      grid-template-columns: minmax(0, 1.55fr) minmax(17rem, 0.65fr);
+      gap: 1.5rem;
+      padding: clamp(1.5rem, 4vw, 3rem);
+      color: #f3f7ff;
+      background: var(--navy);
+    }
+    .positioning blockquote {
+      margin: 0;
+      font-family: var(--display);
+      font-size: clamp(1.7rem, 4vw, 3.3rem);
+      font-weight: 600;
+      letter-spacing: -0.025em;
+      line-height: 1.12;
+    }
+    .positioning aside {
+      padding-left: 1.5rem;
+      border-left: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .positioning aside p { margin: 0; color: #b9cae4; }
+    .positioning aside strong { color: #ffffff; }
+
+    .method-note {
+      padding: 1.3rem 1.5rem;
+      background: #fff8e9;
+      border-left: 4px solid var(--amber);
+      color: #65502c;
+      font-size: 0.9rem;
+    }
+
+    .sources {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      counter-reset: sources;
+    }
+    .sources li {
+      counter-increment: sources;
+      display: grid;
+      grid-template-columns: 2.4rem 1fr;
+      gap: 0.65rem;
+      padding: 0.9rem 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .sources li::before {
+      content: "[" counter(sources) "]";
+      color: var(--cobalt);
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      font-weight: 800;
+    }
+    .sources a { font-weight: 750; text-underline-offset: 0.2em; }
+    .sources span { display: block; color: var(--muted); font-size: 0.82rem; }
+
+    footer {
+      padding: 2rem 1.25rem;
+      color: #9bb0d0;
+      background: var(--navy);
+      text-align: center;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+    }
+
+    @media (max-width: 850px) {
+      .topbar { align-items: flex-start; flex-direction: column; }
+      .topbar nav { width: 100%; }
+      .verdict-strip, .section-head, .architecture, .positioning { grid-template-columns: 1fr; }
+      .cards { grid-template-columns: 1fr; }
+      .gap-grid { grid-template-columns: 1fr 1fr; }
+      .positioning aside { padding: 1.2rem 0 0; border-left: 0; border-top: 1px solid rgba(255,255,255,.2); }
+      .lane { grid-template-columns: 7rem repeat(5, minmax(6.7rem, 1fr)); width: 56rem; }
+      .pipeline-board { overflow-x: auto; }
+    }
+
+    @media (max-width: 560px) {
+      .hero-inner, main, .verdict-strip { width: min(100% - 1.5rem, 1180px); }
+      .hero-inner { padding-top: 3.6rem; }
+      h1 { font-size: clamp(2.65rem, 15vw, 4.3rem); }
+      .gap-grid { grid-template-columns: 1fr; }
+      .card dl { grid-template-columns: 1fr; gap: 0.15rem; }
+      .card dd { margin-bottom: 0.65rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+    }
+
+    @media print {
+      @page { size: A4 landscape; margin: 12mm; }
+      body { color: #000; background: #fff; font-size: 10pt; }
+      .topbar, .skip-link { display: none; }
+      .hero { color: #000; background: #fff; border-bottom: 2px solid #000; }
+      .hero-inner { width: 100%; padding: 0 0 1.2rem; }
+      .hero-lede, .eyebrow { color: #333; }
+      .verdict-strip { width: 100%; margin: 1rem 0 0; box-shadow: none; }
+      main { width: 100%; padding: 0; }
+      section { margin-top: 2rem; break-inside: avoid; }
+      .pipeline-board, .architecture-copy, .positioning { background: #fff; color: #000; border: 1px solid #777; box-shadow: none; }
+      .pipeline-board *, .architecture-copy *, .positioning * { color: #000 !important; }
+      .table-shell { box-shadow: none; }
+      thead th, thead th.basa-col { color: #000; background: #ddd; }
+      .card, .gap-card { break-inside: avoid; }
+      footer { color: #000; background: #fff; border-top: 1px solid #777; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#content">Skip to comparison</a>
+
+  <header class="topbar">
+    <a class="brand" href="#top" aria-label="Basa Video comparison home">
+      <span class="brand-mark">Basa</span>
+      <span class="brand-sub">Video comparison</span>
+    </a>
+    <nav aria-label="Report sections">
+      <a href="#pipeline">Pipeline</a>
+      <a href="#scorecard">Scorecard</a>
+      <a href="#profiles">Profiles</a>
+      <a href="#architecture">Basa contract</a>
+      <a href="#gaps">Gaps</a>
+      <a href="#sources">Sources</a>
+    </nav>
+  </header>
+
+  <div id="top" class="hero">
+    <div class="hero-inner">
+      <p class="eyebrow">Product study · 22 August 2026</p>
+      <h1>Same ingredients.<br>Different promise.</h1>
+      <p class="hero-lede">Basa, ChalkTalk Studio, <em>ari</em>, PowerPoint bridges and custom scripts can all touch slides, speech and video. The meaningful difference is who owns the source, how many handoffs exist, and whether synchronization is a dependable product contract.</p>
+    </div>
+  </div>
+
+  <aside class="verdict-strip" aria-label="Executive verdict">
+    <p class="verdict-label">Executive verdict</p>
+    <p>Basa is not a novel combination of FFmpeg, browser capture and text-to-speech. Its differentiation is a lean, source-native and reproducible path from standard Quarto speaker notes to a synchronized MP4—with a free local voice as the default.</p>
+  </aside>
+
+  <main id="content">
+    <section id="pipeline" aria-labelledby="pipeline-title">
+      <div class="section-head">
+        <h2 id="pipeline-title">The handoff test</h2>
+        <p>Every extra format, editor or manual action introduces another place for notes, timing or visual fidelity to drift. Basa’s current advantage is not more surface area; it is a shorter route.</p>
+      </div>
+
+      <div class="pipeline-board" role="img" aria-label="Workflow lanes comparing the steps from presentation source to video output">
+        <div class="lane lane-basa">
+          <div class="lane-name">Basa</div>
+          <div class="step">QMD + notes</div>
+          <div class="step">Quarto Reveal</div>
+          <div class="step">Kokoro / ElevenLabs</div>
+          <div class="step">Measured timeline</div>
+          <div class="step">MP4 + captions</div>
+        </div>
+        <div class="lane">
+          <div class="lane-name">ChalkTalk</div>
+          <div class="step">Web editor</div>
+          <div class="step">Reveal fragments</div>
+          <div class="step">ElevenLabs</div>
+          <div class="step">Auto-advance</div>
+          <div class="step detour">Voice-enabled HTML</div>
+        </div>
+        <div class="lane">
+          <div class="lane-name">ari</div>
+          <div class="step">Rmd / script</div>
+          <div class="step">HTML / images</div>
+          <div class="step">Cloud TTS</div>
+          <div class="step">FFmpeg stitch</div>
+          <div class="step">MP4 + optional burn</div>
+        </div>
+        <div class="lane lane-manual">
+          <div class="lane-name">PPTX bridge</div>
+          <div class="step">QMD</div>
+          <div class="step detour">PPTX conversion</div>
+          <div class="step detour">Desktop / cloud editor</div>
+          <div class="step">Record / synthesize</div>
+          <div class="step">MP4</div>
+        </div>
+        <div class="lane lane-manual">
+          <div class="lane-name">DIY</div>
+          <div class="step">QMD / HTML</div>
+          <div class="step">Custom parser</div>
+          <div class="step">TTS scripts</div>
+          <div class="step">Capture + timing</div>
+          <div class="step">FFmpeg commands</div>
+        </div>
+        <p class="legend"><span><strong>Solid rail:</strong> integrated workflow</span><span><strong>Dashed rail:</strong> user-assembled workflow</span><span><strong>Amber:</strong> format or application handoff</span></p>
+      </div>
+    </section>
+
+    <section id="scorecard" aria-labelledby="scorecard-title">
+      <div class="section-head">
+        <h2 id="scorecard-title">Capability scorecard</h2>
+        <p>This is a capability comparison, not an overall quality ranking. “Partial” means the feature exists with a meaningful qualification, manual step or narrower contract.</p>
+      </div>
+
+      <div class="table-shell">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Capability</th>
+              <th scope="col" class="basa-col">Basa Video</th>
+              <th scope="col">ChalkTalk Studio</th>
+              <th scope="col">ari</th>
+              <th scope="col">PPTX bridge</th>
+              <th scope="col">DIY pipeline</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Primary input</th>
+              <td class="basa-col">QMD or Reveal HTML</td>
+              <td>ChalkTalk web-editor project</td>
+              <td>Rmd, HTML, images and script</td>
+              <td>Quarto-generated PPTX</td>
+              <td>Whatever the user implements</td>
+            </tr>
+            <tr>
+              <th scope="row">Standard Quarto notes</th>
+              <td class="basa-col"><span class="status yes">First-class</span></td>
+              <td><span class="status no">Not documented</span></td>
+              <td><span class="status partial">Separate script/comments</span></td>
+              <td><span class="status yes">PPTX notes supported</span><a class="cite" href="#source-3" aria-label="Source 3">[3]</a></td>
+              <td><span class="status partial">Custom parsing required</span></td>
+            </tr>
+            <tr>
+              <th scope="row">Direct MP4 output</th>
+              <td class="basa-col"><span class="status yes">Yes</span></td>
+              <td><span class="status no">No exporter found</span></td>
+              <td><span class="status yes">Yes</span><a class="cite" href="#source-2" aria-label="Source 2">[2]</a></td>
+              <td><span class="status yes">Yes</span><a class="cite" href="#source-4" aria-label="Source 4">[4]</a><a class="cite" href="#source-5" aria-label="Source 5">[5]</a></td>
+              <td><span class="status partial">When assembled</span></td>
+            </tr>
+            <tr>
+              <th scope="row">Free local TTS default</th>
+              <td class="basa-col"><span class="status yes">Kokoro</span></td>
+              <td><span class="status no">ElevenLabs integration</span><a class="cite" href="#source-1" aria-label="Source 1">[1]</a></td>
+              <td><span class="status no">Cloud TTS documented</span><a class="cite" href="#source-2" aria-label="Source 2">[2]</a></td>
+              <td><span class="status no">Platform-dependent</span></td>
+              <td><span class="status partial">Possible, not supplied</span></td>
+            </tr>
+            <tr>
+              <th scope="row">Audio-driven slide timing</th>
+              <td class="basa-col"><span class="status yes">Measured with FFprobe</span></td>
+              <td><span class="status yes">Duration-driven fragments</span></td>
+              <td><span class="status yes">Audio/image stitching</span><a class="cite" href="#source-2" aria-label="Source 2">[2]</a></td>
+              <td><span class="status partial">Recorded/generated timings</span><a class="cite" href="#source-4" aria-label="Source 4">[4]</a></td>
+              <td><span class="status partial">Must be implemented</span></td>
+            </tr>
+            <tr>
+              <th scope="row">Captions</th>
+              <td class="basa-col">Phrase-timed SRT + styled ASS</td>
+              <td><span class="status no">Not established</span></td>
+              <td>SRT and burned subtitles</td>
+              <td>Varies by chosen editor</td>
+              <td>Whatever the user implements</td>
+            </tr>
+            <tr>
+              <th scope="row">Fragment-level narration</th>
+              <td class="basa-col"><span class="status no">Future work</span></td>
+              <td><span class="status yes">Yes</span></td>
+              <td><span class="status no">Slide/image oriented</span></td>
+              <td><span class="status partial">Animations vary</span></td>
+              <td><span class="status partial">Possible, complex</span></td>
+            </tr>
+            <tr>
+              <th scope="row">Visual authoring GUI</th>
+              <td class="basa-col"><span class="status no">CLI only</span></td>
+              <td><span class="status yes">Core strength</span><a class="cite" href="#source-1" aria-label="Source 1">[1]</a></td>
+              <td><span class="status no">R package</span></td>
+              <td><span class="status yes">PowerPoint / hosted editor</span></td>
+              <td><span class="status no">No common GUI</span></td>
+            </tr>
+            <tr>
+              <th scope="row">Offline/private path</th>
+              <td class="basa-col"><span class="status yes">Yes with Kokoro</span></td>
+              <td><span class="status no">Multiple hosted services</span><a class="cite" href="#source-1" aria-label="Source 1">[1]</a></td>
+              <td><span class="status partial">Local assembly; cloud speech</span></td>
+              <td><span class="status partial">Depends on route</span></td>
+              <td><span class="status yes">Possible</span></td>
+            </tr>
+            <tr>
+              <th scope="row">Caching + provenance</th>
+              <td class="basa-col"><span class="status yes">Build manifest and audio cache</span></td>
+              <td><span class="status partial">Cloud audio cache</span></td>
+              <td><span class="status no">No equivalent contract found</span></td>
+              <td><span class="status no">No source-build manifest</span></td>
+              <td><span class="status partial">Must be designed</span></td>
+            </tr>
+            <tr>
+              <th scope="row">Licence clarity</th>
+              <td class="basa-col">Apache-2.0 + notices</td>
+              <td><span class="status no">No repository licence found</span></td>
+              <td>MIT<a class="cite" href="#source-2" aria-label="Source 2">[2]</a></td>
+              <td>Product/service terms</td>
+              <td>Depends on every component</td>
+            </tr>
+            <tr>
+              <th scope="row">Current maturity</th>
+              <td class="basa-col">Working MVP; private package</td>
+              <td>Working web application source; no releases shown</td>
+              <td>Established package</td>
+              <td>Mature products</td>
+              <td>Not a product</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="profiles" aria-labelledby="profiles-title">
+      <div class="section-head">
+        <h2 id="profiles-title">What each option optimizes</h2>
+        <p>The tools overlap at the output level, but they start from different assumptions about who authors the slides, where speech comes from and how much assembly the user accepts.</p>
+      </div>
+
+      <div class="cards">
+        <article class="card">
+          <p class="card-kicker">Source-native renderer</p>
+          <h3>Basa Video</h3>
+          <p>Basa treats the presentation source and its standard speaker notes as the durable artifact. The output can be regenerated after a content change without visiting another editor or manually rebuilding timings.</p>
+          <dl>
+            <dt>Best for</dt><dd>Quarto users, educators, researchers and code-first teams.</dd>
+            <dt>Signature</dt><dd>Measured narration duration controls each slide boundary.</dd>
+            <dt>Trade-off</dt><dd>No GUI, fragments, music or burned captions yet.</dd>
+            <dt>Providers</dt><dd>Kokoro shipped locally; ElevenLabs shipped as BYO key. Chatterbox and Qwen are planned, not yet installed by <code>--all</code>.</dd>
+          </dl>
+        </article>
+
+        <article class="card">
+          <p class="card-kicker">AI presentation studio</p>
+          <h3>ChalkTalk Studio</h3>
+          <p>ChalkTalk describes itself as a Next.js presentation creation tool with AI slide generation and real-time collaboration. Its documented stack relies on Convex, Clerk, multiple AI services, ElevenLabs and a GrapesJS Studio licence key.<a class="cite" href="#source-1" aria-label="Source 1">[1]</a></p>
+          <dl>
+            <dt>Best for</dt><dd>People who want a web editor and collaborative slide creation.</dd>
+            <dt>Signature</dt><dd>Voice audio can drive Reveal fragments and auto-advance in exported HTML.</dd>
+            <dt>Trade-off</dt><dd>No native Quarto input or MP4 rendering path was found in the inspected repository.</dd>
+            <dt>Legal note</dt><dd>The public repository showed no declared licence when reviewed; source visibility alone does not grant general reuse rights.</dd>
+          </dl>
+        </article>
+
+        <article class="card">
+          <p class="card-kicker">R ecosystem predecessor</p>
+          <h3>ari</h3>
+          <p><em>ari</em> combines scripts, images or HTML slides, computer-generated narration and FFmpeg. Its own workflow begins with R Markdown/xaringan HTML and narration supplied separately or through comments in an Rmd file.<a class="cite" href="#source-2" aria-label="Source 2">[2]</a></p>
+          <dl>
+            <dt>Best for</dt><dd>Existing R teaching pipelines and users comfortable with R packages.</dd>
+            <dt>Signature</dt><dd>A proven text-to-lecture-video concept with subtitle burning.</dd>
+            <dt>Trade-off</dt><dd>Older R Markdown conventions, external TTS credentials and Webshot rendering caveats.</dd>
+            <dt>Lesson for Basa</dt><dd>Burned captions are useful, but should remain optional so slide space is preserved.</dd>
+          </dl>
+        </article>
+
+        <article class="card">
+          <p class="card-kicker">Application bridge</p>
+          <h3>PPTX + PowerPoint or SlideSpeak</h3>
+          <p>Quarto can render PowerPoint presentations with speaker notes.<a class="cite" href="#source-3" aria-label="Source 3">[3]</a> PowerPoint can export recorded narration, animation and timings to MP4,<a class="cite" href="#source-4" aria-label="Source 4">[4]</a> while SlideSpeak accepts presentation files and exports narrated HD MP4.<a class="cite" href="#source-5" aria-label="Source 5">[5]</a></p>
+          <dl>
+            <dt>Best for</dt><dd>Users who already live in PowerPoint or prefer a hosted editor.</dd>
+            <dt>Signature</dt><dd>Familiar editing and a short path once the deck is in PPTX.</dd>
+            <dt>Trade-off</dt><dd>The QMD source is no longer the only working artifact; Reveal-specific behaviour may not survive the bridge.</dd>
+            <dt>Lesson for Basa</dt><dd>Future input adapters should normalize into one internal slide model rather than create separate renderers.</dd>
+          </dl>
+        </article>
+
+        <article class="card">
+          <p class="card-kicker">Composable recipe</p>
+          <h3>DeckTape + TTS + FFmpeg</h3>
+          <p>This is an architecture sketch, not a cohesive application. It proves the job is technically possible, but leaves the most failure-prone product decisions—note parsing, capture stability, timing, cache identity, caption segmentation and error recovery—to each user.</p>
+          <dl>
+            <dt>Best for</dt><dd>One-off experiments and teams needing total low-level control.</dd>
+            <dt>Signature</dt><dd>Every component can be swapped.</dd>
+            <dt>Trade-off</dt><dd>Every integration and maintenance burden also belongs to the user.</dd>
+            <dt>Basa difference</dt><dd>Basa turns this recipe into one tested command and a defined output contract.</dd>
+          </dl>
+        </article>
+      </div>
+
+      <p class="method-note"><strong>Correction to the original comparison:</strong> Video2PPT is named literally—it converts video into editable PowerPoint, not PowerPoint into narrated video.<a class="cite" href="#source-6" aria-label="Source 6">[6]</a> It should not be counted as a direct Basa competitor.</p>
+    </section>
+
+    <section id="architecture" aria-labelledby="architecture-title">
+      <div class="section-head">
+        <h2 id="architecture-title">The Basa contract</h2>
+        <p>The shared technologies are commodities. The durable value is the interface between authoring, narration, timing and output.</p>
+      </div>
+
+      <div class="architecture">
+        <div class="architecture-copy">
+          <p class="card-kicker">One command, one model</p>
+          <h3>Notes become the timeline.</h3>
+          <p>The current MVP accepts <code>.qmd</code> or Reveal HTML, normalizes each slide into an internal record, synthesizes its notes, measures the audio, captures the visual state and emits the final media package.</p>
+          <p>This architecture also protects the future direction: PPTX, documents or other presentation formats can later become input adapters without duplicating narration and timing logic.</p>
+        </div>
+        <ol class="contract">
+          <li><div><strong>Parse a stable narration source</strong><span>Standard <code>::: {.notes}</code> in QMD or embedded <code>aside.notes</code> in Reveal HTML.</span></div></li>
+          <li><div><strong>Render the authored visual</strong><span>Quarto produces Reveal HTML; Puppeteer captures one stable visual state per slide.</span></div></li>
+          <li><div><strong>Synthesize with explicit provider semantics</strong><span>Kokoro is local and free by default. ElevenLabs requires deliberate provider and plan selection.</span></div></li>
+          <li><div><strong>Measure instead of estimate</strong><span>FFprobe reads actual narration duration. Configurable lead and trail pauses are then added.</span></div></li>
+          <li><div><strong>Package accessible outputs</strong><span>FFmpeg creates H.264/AAC MP4; Basa also writes short single-line SRT and styled ASS captions.</span></div></li>
+          <li><div><strong>Make rebuilds accountable</strong><span>Audio caching and a build manifest record provider, voice, model, language, transcript, toolchain and provenance.</span></div></li>
+        </ol>
+      </div>
+    </section>
+
+    <section id="gaps" aria-labelledby="gaps-title">
+      <div class="section-head">
+        <h2 id="gaps-title">Where Basa should go next</h2>
+        <p>Modernity is not the number of features. It is a smaller failure surface, clear defaults and the ability to extend the core without breaking the original promise.</p>
+      </div>
+
+      <div class="gap-grid">
+        <article class="gap-card priority">
+          <span class="gap-label">Priority 1</span>
+          <h3>Fragment-level narration</h3>
+          <p>Capture each Reveal fragment state and attach narration to that state. This is the clearest capability ChalkTalk has that Basa currently lacks.</p>
+        </article>
+        <article class="gap-card priority">
+          <span class="gap-label">Priority 2</span>
+          <h3>Forced alignment</h3>
+          <p>Replace phrase-weighted timing with actual word or phrase timestamps while retaining the compact one-line caption design.</p>
+        </article>
+        <article class="gap-card">
+          <span class="gap-label">Priority 3</span>
+          <h3>Real platform validation</h3>
+          <p>Run full installation and render smoke tests on Windows, macOS Intel, Apple Silicon and representative Linux distributions.</p>
+        </article>
+        <article class="gap-card">
+          <span class="gap-label">Priority 4</span>
+          <h3>Publishable installation</h3>
+          <p>Move from a private package and source install toward signed, versioned releases with a predictable upgrade story.</p>
+        </article>
+        <article class="gap-card">
+          <span class="gap-label">Priority 5</span>
+          <h3>Optional media layers</h3>
+          <p>Add burned captions, music and embedded-video timelines behind explicit flags so the lean default remains unchanged.</p>
+        </article>
+        <article class="gap-card">
+          <span class="gap-label">Later</span>
+          <h3>Thin interface, not an editor</h3>
+          <p>A small desktop or local web interface could expose voices and render progress. Rebuilding Quarto authoring itself would blur Basa’s strongest distinction.</p>
+        </article>
+      </div>
+    </section>
+
+    <section aria-labelledby="position-title">
+      <div class="positioning">
+        <blockquote id="position-title">“Basa turns a source-controlled Quarto or Reveal presentation—with its speaker notes—into a locally reproducible, synchronized narrated video.”</blockquote>
+        <aside>
+          <p><strong>Keep this wedge.</strong> Do not position Basa as another AI slide generator. Position it as the dependable publishing step between authored teaching material and finished video.</p>
+        </aside>
+      </div>
+    </section>
+
+    <section id="sources" aria-labelledby="sources-title">
+      <div class="section-head">
+        <h2 id="sources-title">Sources and method</h2>
+        <p>Competitor capabilities were checked against current project repositories and official product documentation. Basa capabilities were checked against the local implementation and project documentation. “Not found” means absent from the inspected public repository or documentation, not proof that a private or future implementation cannot exist.</p>
+      </div>
+
+      <ol class="sources">
+        <li id="source-1"><div><a href="https://github.com/the-graph-courses/chalktalk_studio">ChalkTalk Studio repository</a><span>README, documented technology stack and public repository structure.</span></div></li>
+        <li id="source-2"><div><a href="https://github.com/jhudsl/ari">ari repository</a><span>README, package workflow, FFmpeg requirements and R Markdown narration conventions.</span></div></li>
+        <li id="source-3"><div><a href="https://quarto.org/docs/presentations/powerpoint.html">Quarto: PowerPoint presentations</a><span>Official PPTX output and speaker-note support.</span></div></li>
+        <li id="source-4"><div><a href="https://support.microsoft.com/en-us/PowerPoint/turn-your-presentation-into-a-video">Microsoft: Turn your presentation into a video</a><span>Official MP4 export, narration and timing workflow.</span></div></li>
+        <li id="source-5"><div><a href="https://slidespeak.co/features/presentation-video-and-export">SlideSpeak: Presentation video and export</a><span>Official presentation import, AI narration and MP4 export description.</span></div></li>
+        <li id="source-6"><div><a href="https://video2ppt.com/">Video2PPT</a><span>Official description of the video-to-editable-PowerPoint direction.</span></div></li>
+      </ol>
+    </section>
+  </main>
+
+  <footer>Basa means “teach” in Berom · Detailed comparison snapshot · 22 August 2026</footer>
+</body>
+</html>
